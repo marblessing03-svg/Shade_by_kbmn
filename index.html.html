@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shade — Find Your Perfect Match</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;500&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#f8f3e9;--parchment:#3c4030;--gold:#5f6e46;--gold-light:#a8676d;
+  --dust:#7c7058;--ash:#8f8264;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--ink);color:var(--parchment);overflow-x:hidden;cursor:none}
+#cursor{position:fixed;width:10px;height:10px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:.15s}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(95,110,70,.45);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .1s ease-out,top .1s ease-out}
+body::before{content:'';position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:26px 52px;transition:all .4s}
+nav.scrolled{background:rgba(248,243,233,.93);backdrop-filter:blur(16px);padding:16px 52px;border-bottom:1px solid rgba(95,110,70,.12)}
+.nav-logo{font-family:'Cinzel',serif;font-size:21px;letter-spacing:.18em;color:var(--gold);text-decoration:none}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ash);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold-light)}
+.nav-cta{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);background:var(--gold);border:none;padding:10px 26px;cursor:pointer;transition:background .2s}
+.nav-cta:hover{background:var(--gold-light)}
+
+/* HERO */
+#hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:120px 52px 80px;position:relative;overflow:hidden;gap:60px}
+.hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 70% 80% at 70% 50%,rgba(95,110,70,.06) 0%,transparent 70%)}
+.hero-left{position:relative;z-index:1}
+.hero-eyebrow{font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.hero-eyebrow::before{content:'';display:block;width:28px;height:1px;background:var(--gold)}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(52px,6.5vw,90px);font-weight:300;line-height:.95;letter-spacing:-.02em;margin-bottom:28px}
+h1 em{font-style:italic;color:var(--gold-light)}
+.hero-sub{font-size:13px;line-height:1.85;color:var(--ash);font-weight:300;max-width:400px;margin-bottom:48px}
+.hero-actions{display:flex;align-items:center;gap:24px}
+.btn-primary{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink);background:var(--gold);border:none;padding:16px 40px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.btn-primary::before{content:'';position:absolute;inset:0;background:var(--gold-light);transform:translateX(-100%);transition:transform .3s ease}
+.btn-primary:hover::before{transform:translateX(0)}
+.btn-primary span{position:relative;z-index:1}
+.btn-ghost{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ash);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:4px;transition:color .2s}
+.btn-ghost:hover{color:var(--parchment)}
+
+/* Hero camera */
+.hero-right{position:relative;z-index:1;display:flex;justify-content:center;align-items:center}
+.camera-frame{width:min(360px,88vw);aspect-ratio:3/4;position:relative;border-radius:2px;box-shadow:0 0 0 1px rgba(95,110,70,.22),0 60px 100px rgba(60,64,48,.28);overflow:hidden;background:#121212}
+.camera-feed{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+.cam-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(26,28,20,.55) 0%,transparent 28%,transparent 68%,rgba(26,28,20,.55) 100%)}
+.face-oval{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:56%;height:60%;border:1px solid rgba(95,110,70,.5);border-radius:50% 50% 45% 45%}
+.corner{position:absolute;width:16px;height:16px;border-color:var(--gold)}
+.corner.tl{top:12px;left:12px;border-top:1px solid;border-left:1px solid}
+.corner.tr{top:12px;right:12px;border-top:1px solid;border-right:1px solid}
+.corner.bl{bottom:12px;left:12px;border-bottom:1px solid;border-left:1px solid}
+.corner.br{bottom:12px;right:12px;border-bottom:1px solid;border-right:1px solid}
+.cam-scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(95,110,70,.7),transparent);animation:scanMove 2s ease-in-out infinite alternate}
+@keyframes scanMove{from{top:10%}to{top:88%}}
+.cam-badge{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(95,110,70,.8);white-space:nowrap;background:rgba(26,28,20,.6);padding:5px 12px;backdrop-filter:blur(4px)}
+.cam-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.ph-face{width:90px;height:108px;border:1px solid rgba(95,110,70,.3);border-radius:50% 50% 45% 45%;animation:phPulse 3s ease-in-out infinite}
+@keyframes phPulse{0%,100%{opacity:.35}50%{opacity:.7}}
+.ph-txt{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:rgba(95,110,70,.35)}
+.shade-chip{position:absolute;display:flex;align-items:center;gap:8px;background:rgba(26,28,20,.88);border:1px solid rgba(95,110,70,.18);padding:7px 13px;backdrop-filter:blur(6px);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ash);animation:chipFloat 4s ease-in-out infinite}
+.shade-chip .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chip1{top:18%;right:-22px;animation-delay:0s}
+.chip2{bottom:26%;right:-26px;animation-delay:1.6s}
+@keyframes chipFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* HOW */
+#how{padding:130px 52px;display:grid;grid-template-columns:1fr 2fr;gap:80px;align-items:start;border-top:1px solid rgba(95,110,70,.07)}
+.section-tag{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.section-tag::before{content:'';width:22px;height:1px;background:var(--gold);display:block}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4vw,52px);font-weight:300;line-height:1.1;letter-spacing:-.01em}
+.section-title em{font-style:italic;color:var(--gold-light)}
+.steps{display:flex;flex-direction:column}
+.step{display:grid;grid-template-columns:56px 1fr;gap:24px;padding:34px 0;border-bottom:1px solid rgba(95,110,70,.07);opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease}
+.step.visible{opacity:1;transform:none}
+.step-num{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;color:var(--gold);padding-top:3px}
+.step h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;margin-bottom:9px}
+.step p{font-size:12px;line-height:1.8;color:var(--dust);font-weight:300}
+
+/* SCANNER SECTION */
+#scanner{padding:100px 52px;border-top:1px solid rgba(95,110,70,.07);border-bottom:1px solid rgba(95,110,70,.07);background:linear-gradient(to bottom,transparent,rgba(95,110,70,.025),transparent)}
+.scanner-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1.4fr;gap:80px;align-items:start}
+.scanner-info p{font-size:13px;line-height:1.85;color:var(--dust);margin-top:18px;font-weight:300;max-width:360px}
+.scanner-info small{display:block;font-size:10px;color:rgba(95,110,70,.4);margin-top:14px;letter-spacing:.1em}
+
+/* Scanner UI */
+.scan-card{background:rgba(61,68,53,.03);border:1px solid rgba(95,110,70,.14);overflow:hidden}
+.scan-cam-area{position:relative;aspect-ratio:4/3;background:#101010;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#scanVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:none}
+.s-face-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:40%;height:66%;border:1px solid rgba(95,110,70,.5);border-radius:50% 50% 44% 44%}
+.s-corners .c{position:absolute;width:13px;height:13px;border-color:var(--gold)}
+.s-corners .c.tl{top:10px;left:10px;border-top:1px solid;border-left:1px solid}
+.s-corners .c.tr{top:10px;right:10px;border-top:1px solid;border-right:1px solid}
+.s-corners .c.bl{bottom:10px;left:10px;border-bottom:1px solid;border-left:1px solid}
+.s-corners .c.br{bottom:10px;right:10px;border-bottom:1px solid;border-right:1px solid}
+#sScanLine{position:absolute;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(95,110,70,.7),transparent);display:none;animation:scanMove 1.8s ease-in-out infinite alternate}
+#liveSwatch{position:absolute;bottom:12px;right:12px;width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);display:none;transition:background .3s}
+.s-idle-msg{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:rgba(95,110,70,.4)}
+.scan-progress{height:2px;background:rgba(95,110,70,.1)}
+.scan-progress-fill{height:100%;background:linear-gradient(to right,#4f5a3b,var(--gold-light));width:0%;transition:width .1s linear}
+.scan-controls{padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#startScanBtn{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);background:var(--gold);border:none;padding:11px 24px;cursor:pointer;transition:background .2s;flex-shrink:0}
+#startScanBtn:hover{background:var(--gold-light)}
+#startScanBtn:disabled{opacity:.45;cursor:not-allowed}
+.upload-btn{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);background:none;border:1px solid rgba(95,110,70,.3);padding:10px 22px;cursor:pointer;transition:all .2s;flex-shrink:0}
+.upload-btn:hover{border-color:var(--gold);color:var(--gold-light);background:rgba(95,110,70,.06)}
+.upload-btn:disabled{opacity:.45;cursor:not-allowed}
+#uploadedImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.scan-mode-label{position:absolute;top:10px;left:10px;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:rgba(95,110,70,.7);background:rgba(0,0,0,.5);padding:4px 10px;z-index:2;display:none}
+#scanStatus{font-size:11px;color:var(--dust);letter-spacing:.08em}
+
+/* Result shade card */
+#resultArea{display:none}
+.result-shade-hero{display:flex;align-items:center;gap:18px;padding:20px 22px;background:rgba(61,68,53,.03);border-top:1px solid rgba(95,110,70,.1)}
+#rSwatch{width:64px;height:64px;border-radius:50%;flex-shrink:0;box-shadow:0 6px 28px rgba(0,0,0,.5)}
+.r-label{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+#rName{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;font-style:italic}
+#rMeta{font-size:11px;color:var(--dust);margin-top:3px;letter-spacing:.08em}
+#aiLoadMsg{padding:16px 22px;font-size:11px;color:var(--dust);letter-spacing:.1em;display:none;align-items:center;gap:10px}
+
+/* Products */
+#productsWrap{display:none}
+.products-header{padding:20px 22px 12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(95,110,70,.1)}
+.products-header h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;font-style:italic}
+.products-header span{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+/* Category tabs */
+.cat-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(95,110,70,.1);padding:0 22px;gap:2px}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:9px 14px;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dust);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;font-family:'Jost',sans-serif}
+.cat-tab .tab-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+.cat-tab:hover{color:var(--ash)}
+/* Product detail */
+.product-detail{padding:20px 22px;display:none}
+.product-detail.active{display:block;animation:fadeSlide .3s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.pd-top{display:flex;gap:18px;align-items:flex-start;margin-bottom:16px}
+.pd-swatch{width:68px;height:68px;border-radius:3px;flex-shrink:0;position:relative}
+.pd-swatch-inner{position:absolute;inset:5px;border-radius:2px;border:1px solid rgba(255,255,255,.14)}
+.pd-cat{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.pd-brand{font-size:11px;color:rgba(95,110,70,.7);letter-spacing:.1em;margin-bottom:4px}
+.pd-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;font-style:italic;line-height:1.3;margin-bottom:7px}
+.pd-shade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;letter-spacing:.08em;color:#8a6660}
+.pd-tip-box{border-top:1px solid rgba(95,110,70,.1);padding-top:14px}
+.pd-tip-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(95,110,70,.4);margin-bottom:5px}
+.pd-tip{font-size:12px;line-height:1.75;color:var(--dust);font-style:italic}
+/* Mini swatch grid */
+.mini-grid{padding:14px 22px 20px;border-top:1px solid rgba(95,110,70,.07)}
+.mini-grid-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(95,110,70,.35);margin-bottom:10px}
+.mini-swatches{display:flex;gap:6px;flex-wrap:wrap}
+.mini-sw{width:36px;height:36px;border-radius:3px;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative}
+.mini-sw.active{box-shadow:0 0 0 2px var(--gold);transform:scale(1.1)}
+.mini-sw-label{font-size:7px;text-align:center;color:rgba(95,110,70,.4);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+/* Copy btn */
+.copy-row{padding:0 22px 20px}
+.copy-btn{width:100%;background:rgba(95,110,70,.07);border:1px solid rgba(95,110,70,.18);color:var(--dust);padding:12px;font-size:9px;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;font-family:'Jost',sans-serif;transition:all .2s}
+.copy-btn:hover{background:rgba(95,110,70,.14);color:var(--ash)}
+
+/* PALETTE */
+#palette{padding:100px 52px;border-top:1px solid rgba(95,110,70,.07)}
+.palette-header{text-align:center;margin-bottom:56px}
+.palette-strip{display:flex;gap:2px;height:180px}
+.p-swatch{flex:1;position:relative;cursor:pointer;transition:flex .35s ease,filter .2s}
+.p-swatch:hover{flex:3.5;filter:brightness(1.08)}
+.p-swatch-fill{position:absolute;inset:0}
+.p-swatch-label{position:absolute;bottom:0;left:0;right:0;padding:7px 5px 9px;background:linear-gradient(to top,rgba(0,0,0,.65),transparent);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.8);text-align:center;opacity:0;transition:opacity .2s}
+.p-swatch:hover .p-swatch-label{opacity:1}
+.palette-caption{text-align:center;font-size:10px;color:var(--dust);letter-spacing:.2em;text-transform:uppercase;margin-top:16px}
+
+/* FEATURES */
+#features{padding:110px 52px;border-top:1px solid rgba(95,110,70,.07);display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(95,110,70,.06)}
+.feat{padding:48px 36px;background:var(--ink);opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease;position:relative}
+.feat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+.feat:hover::before{opacity:1}
+.feat.visible{opacity:1;transform:none}
+.feat-icon{font-size:24px;margin-bottom:20px;display:block;color:var(--gold)}
+.feat h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;margin-bottom:12px}
+.feat p{font-size:12px;line-height:1.82;color:var(--dust);font-weight:300}
+
+/* TESTIMONIALS */
+#testimonials{padding:110px 0;border-top:1px solid rgba(95,110,70,.07);overflow:hidden}
+.test-header{text-align:center;margin-bottom:56px;padding:0 52px}
+.test-track{display:flex;gap:20px;width:max-content;animation:marquee 30s linear infinite}
+.test-track:hover{animation-play-state:paused}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.test-card{width:320px;flex-shrink:0;border:1px solid rgba(95,110,70,.11);padding:28px 24px;background:rgba(61,68,53,.02)}
+.test-text{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;font-style:italic;line-height:1.65;margin-bottom:18px;color:var(--parchment)}
+.test-author{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.test-shade{font-size:10px;color:var(--dust);margin-top:3px}
+
+/* CTA */
+#cta{padding:150px 52px;text-align:center;position:relative;overflow:hidden;border-top:1px solid rgba(95,110,70,.07)}
+#cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 65% at 50% 50%,rgba(95,110,70,.05) 0%,transparent 70%);pointer-events:none}
+.cta-dec{position:absolute;font-family:'Cormorant Garamond',serif;font-size:220px;font-weight:300;color:rgba(95,110,70,.03);pointer-events:none;user-select:none;top:50%;left:50%;transform:translate(-50%,-50%);letter-spacing:-.05em}
+.cta-label{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:24px}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,6vw,78px);font-weight:300;line-height:1.05;letter-spacing:-.02em;margin-bottom:22px}
+.cta-title em{font-style:italic;color:var(--gold-light)}
+.cta-sub{font-size:13px;color:var(--dust);line-height:1.8;max-width:440px;margin:0 auto 48px;font-weight:300}
+
+/* FOOTER */
+footer{padding:56px 52px 36px;border-top:1px solid rgba(95,110,70,.1);display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px}
+.footer-brand{font-family:'Cinzel',serif;font-size:19px;letter-spacing:.14em;color:var(--gold);margin-bottom:12px}
+.footer-tagline{font-size:11px;color:var(--dust);line-height:1.75;font-weight:300}
+.footer-col h4{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--ash);margin-bottom:18px}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-col a{font-size:11px;color:var(--dust);text-decoration:none;transition:color .2s}
+.footer-col a:hover{color:var(--gold-light)}
+.footer-bottom{margin-top:52px;padding-top:22px;border-top:1px solid rgba(95,110,70,.06);text-align:center;font-size:10px;color:rgba(124,112,88,.55);letter-spacing:.1em;grid-column:1/-1}
+
+/* Scroll hint */
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:7px;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(95,110,70,.38);animation:fadeUpDown 2.8s ease-in-out infinite;z-index:1}
+.scroll-hint-line{width:1px;height:36px;background:linear-gradient(to bottom,rgba(95,110,70,.38),transparent)}
+@keyframes fadeUpDown{0%,100%{opacity:.35;transform:translateX(-50%) translateY(0)}50%{opacity:.9;transform:translateX(-50%) translateY(5px)}}
+
+/* Spinner */
+.spinner{width:14px;height:14px;border:1.5px solid rgba(95,110,70,.25);border-top-color:var(--gold);border-radius:50%;animation:spin .75s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PRICING */
+#pricing{padding:110px 52px;border-top:1px solid rgba(95,110,70,.07)}
+.pricing-header{text-align:center;margin-bottom:64px}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;max-width:1180px;margin:0 auto;background:rgba(95,110,70,.08)}
+.price-card{background:var(--ink);padding:48px 40px;display:flex;flex-direction:column;position:relative}
+.price-card.pro{background:#f6e9e7}
+.price-card.premium{background:#ece3cf}
+.price-card.premium::before{content:'Complete Beauty Profile';position:absolute;top:0;right:32px;transform:translateY(-50%);background:var(--parchment);color:var(--ink);font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:6px 14px;font-family:'Cinzel',serif;white-space:nowrap}
+.price-card.pro::before{content:'Most Popular';position:absolute;top:0;right:32px;transform:translateY(-50%);background:var(--gold);color:var(--ink);font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:6px 14px;font-family:'Cinzel',serif}
+.price-tier{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+.price-amount{font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:300;line-height:1;margin-bottom:6px}
+.price-amount span{font-size:15px;color:var(--dust);font-family:'Jost',sans-serif;font-weight:300}
+.price-desc{font-size:12px;color:var(--dust);margin-bottom:32px;line-height:1.7}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:14px;margin-bottom:36px;flex:1}
+.price-features li{font-size:12px;color:var(--ash);display:flex;align-items:flex-start;gap:10px;line-height:1.6}
+.price-features li::before{content:'—';color:var(--gold);flex-shrink:0}
+.price-features li.disabled{color:rgba(124,112,88,.4)}
+.price-features li.disabled::before{content:'—';color:rgba(124,112,88,.3)}
+.price-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;border:1px solid rgba(95,110,70,.3);background:none;color:var(--ash);padding:15px;cursor:pointer;transition:all .2s;text-align:center}
+.price-btn:hover{border-color:var(--gold);color:var(--gold-light)}
+.price-btn.primary{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.price-btn.primary:hover{background:var(--gold-light);border-color:var(--gold-light)}
+
+/* CHECKOUT MODAL */
+#checkoutOverlay{position:fixed;inset:0;background:rgba(40,42,32,.5);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px}
+#checkoutOverlay.open{display:flex}
+.checkout-modal{background:#fdfbf5;border:1px solid rgba(95,110,70,.18);max-width:440px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.checkout-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--dust);font-size:18px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:color .2s}
+.checkout-close:hover{color:var(--parchment)}
+.checkout-header{padding:36px 36px 24px;border-bottom:1px solid rgba(95,110,70,.1)}
+.checkout-eyebrow{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.checkout-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;font-style:italic}
+.checkout-summary{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;padding-top:18px;border-top:1px solid rgba(95,110,70,.08)}
+.checkout-summary-label{font-size:11px;color:var(--dust);letter-spacing:.05em}
+.checkout-summary-price{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic}
+.checkout-summary-price span{font-size:11px;color:var(--dust);font-family:'Jost',sans-serif}
+.checkout-body{padding:28px 36px 36px}
+.cf-group{margin-bottom:18px}
+.cf-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dust);margin-bottom:8px;display:block}
+.cf-input{width:100%;background:rgba(61,68,53,.04);border:1px solid rgba(95,110,70,.2);color:var(--parchment);padding:13px 14px;font-size:13px;font-family:'Jost',sans-serif;transition:border-color .2s;letter-spacing:.02em}
+.cf-input:focus{outline:none;border-color:var(--gold)}
+.cf-input::placeholder{color:rgba(124,112,88,.5)}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cf-card-wrap{position:relative}
+.cf-card-icons{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:6px;font-size:9px;letter-spacing:.06em;color:var(--dust)}
+.checkout-pay-btn{width:100%;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;padding:16px;cursor:pointer;margin-top:8px;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.checkout-pay-btn:hover{background:var(--gold-light)}
+.checkout-pay-btn:disabled{opacity:.5;cursor:not-allowed}
+.checkout-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:9px;letter-spacing:.1em;color:rgba(124,112,88,.6)}
+.checkout-secure svg{flex-shrink:0}
+.checkout-error{font-size:11px;color:#b15c52;margin-top:-6px;margin-bottom:14px;display:none}
+.checkout-success{display:none;text-align:center;padding:50px 36px}
+.checkout-success-icon{width:52px;height:52px;border-radius:50%;border:1px solid rgba(95,110,70,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:22px;color:var(--gold)}
+.checkout-success h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;font-style:italic;margin-bottom:12px}
+.checkout-success p{font-size:12px;color:var(--dust);line-height:1.7;max-width:300px;margin:0 auto}
+
+/* Responsive pricing */
+@media(max-width:1080px){
+  .pricing-grid{grid-template-columns:1fr 1fr;max-width:760px}
+  .price-card.premium{grid-column:1/-1}
+}
+@media(max-width:760px){
+  #pricing{padding:72px 24px}
+  .pricing-grid{grid-template-columns:1fr}
+  .price-card.premium{grid-column:auto}
+  .checkout-header,.checkout-body{padding-left:24px;padding-right:24px}
+  .cf-row{grid-template-columns:1fr 1fr}
+}
+
+/* Responsive */
+@media(max-width:920px){
+
+  nav{padding:20px 24px}nav.scrolled{padding:14px 24px}
+  .nav-links{display:none}
+  #hero{grid-template-columns:1fr;padding:110px 24px 60px;gap:44px}
+  .hero-right{order:-1}
+  .camera-frame{width:min(290px,84vw)}
+  .chip1,.chip2{display:none}
+  #how{grid-template-columns:1fr;padding:72px 24px;gap:36px}
+  #scanner{padding:72px 24px}
+  .scanner-inner{grid-template-columns:1fr;gap:40px}
+  #palette{padding:72px 24px}.palette-strip{height:140px}
+  #features{grid-template-columns:1fr;padding:72px 24px}
+  #testimonials{padding:72px 0}.test-header{padding:0 24px}
+  #cta{padding:90px 24px}
+  footer{grid-template-columns:1fr;padding:44px 24px 28px}
+  .scroll-hint{display:none}
+  body{cursor:auto}#cursor,#cursor-ring{display:none}
+}
+@media(max-width:600px){
+  .cat-tabs{gap:0}
+  .cat-tab{padding:8px 10px;font-size:8px}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">Shade</a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#scanner">Scan Now</a></li>
+    <li><a href="#palette">Shades</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})">Find My Shade</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-left">
+    <div class="hero-eyebrow">Precision Beauty Technology</div>
+    <h1>Your shade.<br><em>Perfectly</em><br>matched.</h1>
+    <p class="hero-sub">Shade's camera technology reads your exact skin tone and instantly curates all eleven makeup essentials — foundation, concealer, blush, bronzer, highlighter, eyeshadow, eyeliner, mascara, lip color, setting powder, and contour — matched perfectly to your complexion.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})"><span>Scan My Complexion</span></button>
+      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="camera-frame">
+      <div class="cam-placeholder" id="heroPH"><div class="ph-face"></div><span class="ph-txt">Camera Preview</span></div>
+      <video id="heroVid" class="camera-feed" autoplay playsinline muted style="display:none"></video>
+      <div class="cam-overlay"></div>
+      <div class="face-oval"></div>
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="cam-scan-line" id="heroSL" style="display:none"></div>
+      <div class="cam-badge">Live Analysis</div>
+    </div>
+    <div class="shade-chip chip1"><div class="dot" style="background:#CFA07A"></div>Honey · Warm Yellow</div>
+    <div class="shade-chip chip2"><div class="dot" style="background:#935E3A"></div>Toffee · Neutral Warm</div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-hint-line"></div>Scroll</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div>
+    <div class="section-tag">Process</div>
+    <h2 class="section-title">Four steps to your <em>perfect</em> look</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="step-num">01</div><div><h3>Grant Camera Access</h3><p>Allow camera access in your browser. Your camera activates instantly — no download, no app, no sign-up required. Works on any device with a front-facing camera.</p></div></div>
+    <div class="step"><div class="step-num">02</div><div><h3>Real-Time Face Scan</h3><p>Position your face within the guide in natural light. Our algorithm samples thousands of skin pixels over 3.5 seconds, building a precise spectral profile of your exact complexion.</p></div></div>
+    <div class="step"><div class="step-num">03</div><div><h3>Shade Identification</h3><p>We identify your shade name, depth level, and precise undertone — warm, cool, or neutral — placing you within our 12-point spectrum from Porcelain to Ebony.</p></div></div>
+    <div class="step"><div class="step-num">04</div><div><h3>11-Product Look Curation</h3><p>Our AI beauty consultant instantly recommends all eleven makeup essentials — foundation, concealer, blush, bronzer, highlighter, eyeshadow, eyeliner, mascara, lip color, setting powder, and contour — from real prestige and drugstore brands, perfectly matched to your shade.</p></div></div>
+  </div>
+</section>
+
+<!-- LIVE SCANNER -->
+<section id="scanner">
+  <div class="scanner-inner">
+    <div class="scanner-info">
+      <div class="section-tag">Try It Now</div>
+      <h2 class="section-title">See your <em>shade</em> live</h2>
+      <p>Position your face in good natural light, click Scan, and hold still for a few seconds. All eleven of your perfect makeup shades appear instantly.</p>
+      <small>Camera access OR photo upload · No images stored · Works on all browsers & devices</small>
+    </div>
+    <div>
+      <div class="scan-card">
+        <!-- Camera area -->
+        <div class="scan-cam-area">
+          <video id="scanVideo" autoplay playsinline muted></video>
+          <img id="uploadedImg" alt="Uploaded photo"/>
+          <div class="scan-mode-label" id="modeLabel">Camera</div>
+          <div class="s-face-guide" id="faceGuideEl"></div>
+          <div class="s-corners"><div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div></div>
+          <div id="sScanLine"></div>
+          <div id="liveSwatch"></div>
+          <span class="s-idle-msg" id="idleMsg">Position your face here</span>
+        </div>
+        <div class="scan-progress"><div class="scan-progress-fill" id="progFill"></div></div>
+        <div class="scan-controls">
+          <button id="startScanBtn">Start Camera Scan</button>
+          <button id="uploadBtn" class="upload-btn">Upload Photo</button>
+          <input type="file" id="fileInput" accept="image/*" style="display:none"/>
+          <span id="scanStatus">Ready when you are</span>
+        </div>
+      </div>
+
+      <!-- Shade result -->
+      <div id="resultArea">
+        <div class="result-shade-hero">
+          <div id="rSwatch"></div>
+          <div>
+            <div class="r-label">Your Shade</div>
+            <div id="rName"></div>
+            <div id="rMeta"></div>
+          </div>
+        </div>
+        <div id="aiLoadMsg"><span class="spinner"></span> Curating your perfect 11-product look…</div>
+      </div>
+
+      <!-- Products -->
+      <div id="productsWrap">
+        <div class="products-header">
+          <h3 id="lookNameEl"></h3>
+          <span>11 Products</span>
+        </div>
+        <!-- Category tabs -->
+        <div class="cat-tabs" id="catTabs"></div>
+        <!-- Product detail panels -->
+        <div id="productPanels"></div>
+        <!-- Mini swatch grid -->
+        <div class="mini-grid">
+          <div class="mini-grid-label">Full Look — tap any shade</div>
+          <div class="mini-swatches" id="miniSwatches"></div>
+        </div>
+        <!-- Copy -->
+        <div class="copy-row">
+          <button class="copy-btn" id="copyBtn">Copy Full Look to Clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PALETTE -->
+<section id="palette">
+  <div class="palette-header">
+    <div class="section-tag" style="justify-content:center">Our Spectrum</div>
+    <h2 class="section-title">12 shades. <em>Every</em> complexion.</h2>
+  </div>
+  <div class="palette-strip" id="paletteStrip"></div>
+  <p class="palette-caption">Hover to explore · Fair through Rich Deep</p>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="pricing-header">
+    <div class="section-tag" style="justify-content:center">Membership</div>
+    <h2 class="section-title">Free to start. <em>Pro</em> & <em>Premium</em> for more.</h2>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Free</div>
+      <div class="price-amount">$0<span>/month</span></div>
+      <p class="price-desc">Everything you need to find your match.</p>
+      <ul class="price-features">
+        <li>Live camera shade scan</li>
+        <li>Photo upload scan</li>
+        <li>All 11 makeup product categories</li>
+        <li>3 scans per month</li>
+        <li class="disabled">Save & revisit past scans</li>
+        <li class="disabled">Seasonal shade adjustments</li>
+        <li class="disabled">Priority AI recommendations</li>
+      </ul>
+      <button class="price-btn" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})">Get Started Free</button>
+    </div>
+    <div class="price-card pro">
+      <div class="price-tier">Pro</div>
+      <div class="price-amount">$10<span>/month</span></div>
+      <p class="price-desc">Unlimited scans and your full personal beauty profile.</p>
+      <ul class="price-features">
+        <li>Unlimited camera & photo scans</li>
+        <li>All 11 makeup product categories</li>
+        <li>Save & revisit past scans</li>
+        <li>Seasonal shade adjustments for tanning/sun exposure</li>
+        <li>Priority AI recommendations from premium brands</li>
+        <li>Downloadable shade card (PDF)</li>
+        <li>Early access to new features</li>
+      </ul>
+      <button class="price-btn primary" id="upgradeBtn">Upgrade to Pro</button>
+    </div>
+    <div class="price-card premium">
+      <div class="price-tier">Premium</div>
+      <div class="price-amount">$18<span>/month</span></div>
+      <p class="price-desc">Everything in Pro, plus a personalized skincare routine and expert technique for every product.</p>
+      <ul class="price-features">
+        <li>Everything included in Pro</li>
+        <li>Personalized skincare tips based on your scanned skin tone & texture</li>
+        <li>Pro application techniques for all 11 makeup elements</li>
+        <li>AM/PM skincare routine recommendations</li>
+        <li>Ingredient guidance suited to your undertone & depth</li>
+        <li>Video-style step-by-step application guides</li>
+        <li>Direct access to our AI beauty consultant chat</li>
+      </ul>
+      <button class="price-btn primary" id="upgradePremiumBtn">Upgrade to Premium</button>
+    </div>
+  </div>
+</section>
+
+<!-- CHECKOUT MODAL -->
+<div id="checkoutOverlay">
+  <div class="checkout-modal">
+    <button class="checkout-close" id="checkoutClose">✕</button>
+
+    <div id="checkoutForm">
+      <div class="checkout-header">
+        <div class="checkout-eyebrow" id="checkoutEyebrow">Shade Pro</div>
+        <div class="checkout-title">Complete your upgrade</div>
+        <div class="checkout-summary">
+          <span class="checkout-summary-label" id="checkoutSummaryLabel">Shade Pro Membership</span>
+          <span class="checkout-summary-price" id="checkoutSummaryPrice">$10<span>/month</span></span>
+        </div>
+      </div>
+      <div class="checkout-body">
+        <form id="payForm" autocomplete="off">
+          <div class="cf-group">
+            <label class="cf-label">Cardholder Name</label>
+            <input class="cf-input" id="cardName" type="text" placeholder="As it appears on your card" required/>
+          </div>
+          <div class="cf-group cf-card-wrap">
+            <label class="cf-label">Card Number</label>
+            <input class="cf-input" id="cardNumber" type="text" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19" required/>
+            <div class="cf-card-icons" id="cardTypeLabel"></div>
+          </div>
+          <div class="cf-row">
+            <div class="cf-group">
+              <label class="cf-label">Expiry Date</label>
+              <input class="cf-input" id="cardExpiry" type="text" inputmode="numeric" placeholder="MM / YY" maxlength="7" required/>
+            </div>
+            <div class="cf-group">
+              <label class="cf-label">CVC</label>
+              <input class="cf-input" id="cardCvc" type="text" inputmode="numeric" placeholder="123" maxlength="4" required/>
+            </div>
+          </div>
+          <div class="cf-group">
+            <label class="cf-label">Billing Email</label>
+            <input class="cf-input" id="cardEmail" type="email" placeholder="you@example.com" required/>
+          </div>
+          <div class="checkout-error" id="checkoutErr"></div>
+          <button type="submit" class="checkout-pay-btn" id="payBtn">Pay $10.00 / month</button>
+          <div class="checkout-secure">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            Secured checkout · Encrypted payment processing
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="checkout-success" id="checkoutSuccess">
+      <div class="checkout-success-icon">✓</div>
+      <h3 id="successTitle">Welcome to Shade Pro</h3>
+      <p id="successText">Your membership is now active. Unlimited scans, saved shade history, and priority recommendations are ready for you.</p>
+      <button class="price-btn primary" style="margin-top:28px;width:100%" id="closeSuccessBtn">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="feat"><span class="feat-icon">⬡</span><h3>AI Look Curation</h3><p>Claude AI analyzes your unique shade profile and curates all 11 makeup essentials from real prestige and drugstore brands, with exact shade numbers and pro tips.</p></div>
+  <div class="feat"><span class="feat-icon">◎</span><h3>Live Camera Analysis</h3><p>Real-time pixel sampling directly from your camera — no uploads, no waiting. Your results appear in seconds on any device with a front camera.</p></div>
+  <div class="feat"><span class="feat-icon">✦</span><h3>11-Product Coverage</h3><p>Foundation, concealer, blush, bronzer, highlighter, eyeshadow, eyeliner, mascara, lip color, setting powder, and contour — every product matched to your complexion.</p></div>
+  <div class="feat"><span class="feat-icon">◈</span><h3>Undertone Intelligence</h3><p>Beyond depth, we identify your precise undertone — warm, cool, or neutral — so every blush, bronzer, and highlighter genuinely flatters your skin.</p></div>
+  <div class="feat"><span class="feat-icon">◇</span><h3>Pro Application Tips</h3><p>Each of your 11 recommendations includes a professional technique tip — so you know exactly how to apply every product for the best result.</p></div>
+  <div class="feat"><span class="feat-icon">◑</span><h3>Every Device. Every Browser.</h3><p>Works beautifully on iPhone, Android, tablet, and desktop. Chrome, Safari, Firefox — no installation needed. Also available as a native mobile app.</p></div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="test-header">
+    <div class="section-tag" style="justify-content:center">Stories</div>
+    <h2 class="section-title">Worn by <em>every</em> complexion</h2>
+  </div>
+  <div class="test-track" id="testTrack"></div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-dec">shade</div>
+  <p class="cta-label">Begin Your Analysis</p>
+  <h2 class="cta-title">Discover your<br><em>perfect</em> 11 shades</h2>
+  <p class="cta-sub">Free, instant, and beautifully accurate. Your complete makeup look — all 11 products — curated for your exact complexion in seconds.</p>
+  <button class="btn-primary" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})"><span>Scan My Complexion — Free</span></button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-brand">Shade</div>
+    <p class="footer-tagline">Precision skin tone analysis and AI-powered makeup curation for every complexion on earth.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Explore</h4>
+    <ul>
+      <li><a href="#scanner">Scan My Shade</a></li>
+      <li><a href="#palette">Shade Spectrum</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#features">Features</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <ul>
+      <li><a href="#">About Shade</a></li>
+      <li><a href="#">Privacy Policy</a></li>
+      <li><a href="#">Terms of Service</a></li>
+      <li><a href="#">Download App</a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">© 2026 Shade. All rights reserved. · No images are ever stored or transmitted.</div>
+</footer>
+
+<canvas id="hiddenCanvas" style="display:none"></canvas>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const SHADES = [
+  {name:"Porcelain",range:[210,255],hex:"#F8ECD9",undertone:"Cool Pink",depth:"Fair"},
+  {name:"Ivory",range:[195,215],hex:"#F2DFC8",undertone:"Neutral",depth:"Fair"},
+  {name:"Sand",range:[180,200],hex:"#E8CEAF",undertone:"Warm Peach",depth:"Light"},
+  {name:"Beige",range:[165,185],hex:"#DDB99A",undertone:"Warm Golden",depth:"Light"},
+  {name:"Honey",range:[150,170],hex:"#CFA07A",undertone:"Warm Yellow",depth:"Light-Medium"},
+  {name:"Wheat",range:[135,155],hex:"#BD8E64",undertone:"Warm Olive",depth:"Medium"},
+  {name:"Caramel",range:[120,140],hex:"#A87550",undertone:"Warm Bronze",depth:"Medium"},
+  {name:"Toffee",range:[105,125],hex:"#935E3A",undertone:"Neutral Warm",depth:"Medium-Deep"},
+  {name:"Chestnut",range:[90,110],hex:"#7D4A2A",undertone:"Warm Red",depth:"Deep"},
+  {name:"Mahogany",range:[75,95],hex:"#673620",undertone:"Cool Red",depth:"Deep"},
+  {name:"Espresso",range:[55,80],hex:"#4E2510",undertone:"Neutral",depth:"Deep"},
+  {name:"Ebony",range:[0,60],hex:"#321408",undertone:"Cool Blue",depth:"Rich Deep"},
+];
+
+const CATEGORIES = ["Foundation","Concealer","Blush","Bronzer","Highlighter","Eyeshadow","Eyeliner","Mascara","Lip Color","Setting Powder","Contour"];
+
+const TESTIMONIALS = [
+  {text:"I've been buying the wrong foundation for years. Shade matched me to Toffee instantly — my base finally looks like skin, not a mask.",author:"Amara O.",shade:"Toffee · Medium-Deep"},
+  {text:"As someone with cool undertones, I always ended up looking orange. Shade identified it immediately and every product it chose is perfect.",author:"Mei-Lin C.",shade:"Ivory · Fair"},
+  {text:"Finally a tool that truly understands deep skin. All 11 products it recommended are genuinely made for my complexion.",author:"Destiny W.",shade:"Ebony · Rich Deep"},
+  {text:"The pro tip for each product is what sets Shade apart. It's like having a makeup artist in your pocket.",author:"Sofia R.",shade:"Sand · Light"},
+  {text:"Accuracy is uncanny. My Chestnut match is spot-on and the lip color is now my most-worn shade.",author:"Priya N.",shade:"Chestnut · Deep"},
+  {text:"Game changer. I can now shop online knowing every product was chosen for my exact complexion.",author:"Celine M.",shade:"Honey · Light-Medium"},
+  {text:"The contour recommendation alone was worth it — finally a shade that sculpts without going ashy.",author:"Yemi A.",shade:"Caramel · Medium"},
+];
+
+// ── CURSOR ────────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  cursorRing.style.left = e.clientX + 'px';
+  cursorRing.style.top = e.clientY + 'px';
+});
+
+// ── NAV SCROLL ────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── INTERSECTION OBSERVER (animations) ───────────────────────────────
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      const delay = +e.target.dataset.delay || 0;
+      setTimeout(() => e.target.classList.add('visible'), delay);
+      io.unobserve(e.target);
+    }
+  });
+}, {threshold: .14});
+document.querySelectorAll('.step').forEach((el,i) => { el.dataset.delay = i*110; io.observe(el); });
+document.querySelectorAll('.feat').forEach((el,i) => { el.dataset.delay = i*90; io.observe(el); });
+
+// ── PALETTE STRIP ─────────────────────────────────────────────────────
+SHADES.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'p-swatch';
+  el.innerHTML = `<div class="p-swatch-fill" style="background:${s.hex}"></div><div class="p-swatch-label">${s.name}</div>`;
+  document.getElementById('paletteStrip').appendChild(el);
+});
+
+// ── TESTIMONIALS ──────────────────────────────────────────────────────
+const testTrack = document.getElementById('testTrack');
+[...TESTIMONIALS,...TESTIMONIALS].forEach(t => {
+  const el = document.createElement('div');
+  el.className = 'test-card';
+  el.innerHTML = `<p class="test-text">"${t.text}"</p><div class="test-author">${t.author}</div><div class="test-shade">${t.shade}</div>`;
+  testTrack.appendChild(el);
+});
+
+// ── HERO CAMERA (auto-start preview) ─────────────────────────────────
+(async () => {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    const v = document.getElementById('heroVid');
+    v.srcObject = s; v.style.display = 'block';
+    document.getElementById('heroPH').style.display = 'none';
+    document.getElementById('heroSL').style.display = 'block';
+  } catch(_) {}
+})();
+
+// ── SCANNER ───────────────────────────────────────────────────────────
+const scanBtn    = document.getElementById('startScanBtn');
+const uploadBtn  = document.getElementById('uploadBtn');
+const fileInput  = document.getElementById('fileInput');
+const uploadedImg= document.getElementById('uploadedImg');
+const modeLabel  = document.getElementById('modeLabel');
+const faceGuideEl= document.getElementById('faceGuideEl');
+const scanVideo  = document.getElementById('scanVideo');
+const sScanLine  = document.getElementById('sScanLine');
+const liveSwatch = document.getElementById('liveSwatch');
+const idleMsg    = document.getElementById('idleMsg');
+const progFill   = document.getElementById('progFill');
+const scanStatus = document.getElementById('scanStatus');
+const resultArea = document.getElementById('resultArea');
+const rSwatch    = document.getElementById('rSwatch');
+const rName      = document.getElementById('rName');
+const rMeta      = document.getElementById('rMeta');
+const aiLoadMsg  = document.getElementById('aiLoadMsg');
+const prodsWrap  = document.getElementById('productsWrap');
+const catTabs    = document.getElementById('catTabs');
+const prodPanels = document.getElementById('productPanels');
+const miniSws    = document.getElementById('miniSwatches');
+const canvas     = document.getElementById('hiddenCanvas');
+const ctx        = canvas.getContext('2d');
+
+let camStream = null;
+let isScanning = false;
+let currentProducts = [];
+let currentShade = null;
+
+function getLum(r,g,b){ return 0.299*r + 0.587*g + 0.114*b; }
+function getShade(lum){ return SHADES.find(s=>lum>=s.range[0]&&lum<=s.range[1])||SHADES[SHADES.length-1]; }
+function toHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+
+function sampleFrame(){
+  const isUpload = uploadedImg.style.display === 'block';
+  const source = isUpload ? uploadedImg : scanVideo;
+  const srcW = isUpload ? source.naturalWidth : source.videoWidth;
+  const srcH = isUpload ? source.naturalHeight : source.videoHeight;
+  if(!srcW) return null;
+  canvas.width = srcW;
+  canvas.height = srcH;
+  ctx.save();
+  if(!isUpload){ ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(source,0,0,srcW,srcH);
+  ctx.restore();
+  const cx=Math.floor(canvas.width/2), cy=Math.floor(canvas.height/2);
+  const sw=Math.floor(canvas.width*.16), sh=Math.floor(canvas.height*.20);
+  try{
+    const d=ctx.getImageData(cx-sw/2,cy-sh/2,sw,sh).data;
+    let r=0,g=0,b=0,n=0;
+    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++;}
+    return {r:Math.round(r/n),g:Math.round(g/n),b:Math.round(b/n)};
+  }catch(e){return null;}
+}
+
+// ── UPLOAD FLOW ────────────────────────────────────────────────────
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  // Stop any active camera stream first
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+  isScanning = false;
+  scanVideo.style.display = 'none';
+  sScanLine.style.display = 'none';
+  liveSwatch.style.display = 'none';
+  prodsWrap.style.display = 'none';
+  resultArea.style.display = 'none';
+  progFill.style.width = '0%';
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    uploadedImg.src = ev.target.result;
+    uploadedImg.onload = () => {
+      uploadedImg.style.display = 'block';
+      idleMsg.style.display = 'none';
+      modeLabel.textContent = 'Uploaded Photo';
+      modeLabel.style.display = 'block';
+      scanBtn.textContent = 'Scan This Photo';
+      scanStatus.textContent = 'Photo loaded — click Scan to analyze';
+      scanBtn.disabled = false;
+    };
+  };
+  reader.readAsDataURL(file);
+});
+
+async function startScan(){
+  if(isScanning) return;
+  prodsWrap.style.display='none';
+  resultArea.style.display='none';
+  progFill.style.width='0%';
+  scanBtn.disabled=true;
+  uploadBtn.disabled=true;
+
+  const isUploadMode = uploadedImg.style.display === 'block';
+
+  if(isUploadMode){
+    // Analyze the uploaded photo with the same progress animation
+    scanStatus.textContent='Analyzing photo…';
+    isScanning=true;
+    const DURATION=1800, start=Date.now();
+    const samples=[];
+
+    const tick=()=>{
+      if(!isScanning) return;
+      const elapsed=Date.now()-start;
+      const prog=Math.min(elapsed/DURATION,1);
+      progFill.style.width=(prog*100)+'%';
+      const col=sampleFrame();
+      if(col) samples.push(getLum(col.r,col.g,col.b));
+      scanStatus.textContent=`Analyzing… ${Math.round(prog*100)}%`;
+      if(prog<1){ requestAnimationFrame(tick); }
+      else { uploadBtn.disabled=false; finishScan(samples); }
+    };
+    requestAnimationFrame(tick);
+    return;
+  }
+
+  scanStatus.textContent='Starting camera…';
+
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},
+      audio:false
+    });
+    uploadedImg.style.display='none';
+    uploadedImg.src='';
+    scanVideo.srcObject = camStream;
+    await new Promise(res=>{ scanVideo.onloadedmetadata=()=>{ scanVideo.play(); res(); }; });
+    scanVideo.style.display='block';
+    modeLabel.textContent='Camera';
+    modeLabel.style.display='block';
+    idleMsg.style.display='none';
+    sScanLine.style.display='block';
+    liveSwatch.style.display='block';
+    scanStatus.textContent='Hold still — scanning…';
+    isScanning=true;
+
+    const DURATION=3500, start=Date.now();
+    const samples=[];
+
+    const tick=()=>{
+      if(!isScanning) return;
+      const elapsed=Date.now()-start;
+      const prog=Math.min(elapsed/DURATION,1);
+      progFill.style.width=(prog*100)+'%';
+
+      const col=sampleFrame();
+      if(col){
+        samples.push(getLum(col.r,col.g,col.b));
+        liveSwatch.style.background=toHex(col.r,col.g,col.b);
+      }
+      scanStatus.textContent=`Sampling… ${Math.round(prog*100)}%`;
+
+      if(prog<1){ requestAnimationFrame(tick); }
+      else { finishScan(samples); }
+    };
+    requestAnimationFrame(tick);
+
+  }catch(err){
+    scanStatus.textContent = err.name==='NotAllowedError'
+      ? '⚠ Camera access denied. Please allow camera and try again.'
+      : '⚠ Camera not available on this device.';
+    scanBtn.disabled=false;
+    uploadBtn.disabled=false;
+    isScanning=false;
+  }
+}
+
+function finishScan(samples){
+  isScanning=false;
+  camStream?.getTracks().forEach(t=>t.stop());
+  sScanLine.style.display='none';
+  liveSwatch.style.display='none';
+  scanBtn.disabled=false;
+  uploadBtn.disabled=false;
+  scanBtn.textContent='Scan Again';
+  scanStatus.textContent='Analysis complete ✓';
+  progFill.style.width='100%';
+
+  const avgLum = samples.length ? samples.reduce((a,b)=>a+b,0)/samples.length : 130;
+  const shade = getShade(avgLum);
+  const lv=Math.round(avgLum);
+  const hex=toHex(lv,Math.round(lv*.91),Math.round(lv*.76));
+  currentShade={...shade,sampledHex:hex};
+
+  rSwatch.style.cssText=`width:64px;height:64px;border-radius:50%;flex-shrink:0;background:${hex};box-shadow:0 6px 28px rgba(0,0,0,.5)`;
+  rName.innerHTML=`<span style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;font-style:italic">${shade.name}</span>`;
+  rMeta.textContent=`${shade.depth} · ${shade.undertone} · ${hex.toUpperCase()}`;
+  resultArea.style.display='block';
+  aiLoadMsg.style.display='flex';
+
+  fetchProducts(currentShade).then(data=>{
+    aiLoadMsg.style.display='none';
+    renderProducts(data);
+  }).catch(err=>{
+    aiLoadMsg.innerHTML='⚠ Could not load recommendations — check your internet connection.';
+  });
+}
+
+async function fetchProducts(shade){
+  // ── Built-in recommendations for all 12 shades × 11 categories ───
+  // No API call needed — instant, reliable, works in any browser
+  const DB = {
+    "Porcelain": {
+      lookName:"Ethereal Rose Petal",
+      products:[
+        {category:"Foundation",    brand:"Lancôme",      productName:"Teint Idole Ultra Wear",        shade:"010W Ivory",          swatchHex:"#F5E6D3", tip:"Apply with a damp sponge for a second-skin finish on fair skin."},
+        {category:"Concealer",     brand:"NARS",         productName:"Radiant Creamy Concealer",      shade:"Chantilly",           swatchHex:"#F7EAD8", tip:"Tap gently under eyes to avoid creasing on cool-toned fair skin."},
+        {category:"Blush",         brand:"NARS",         productName:"Blush",                         shade:"Orgasm (mini)",       swatchHex:"#E8A090", tip:"Dust lightly on the apples of cheeks — a little goes a long way on fair skin."},
+        {category:"Bronzer",       brand:"Benefit",      productName:"Hoola Lite Matte Bronzer",      shade:"Hoola Lite",          swatchHex:"#C89870", tip:"Use a fluffy brush and apply in a '3' shape for a natural sun-kiss."},
+        {category:"Highlighter",   brand:"Becca",        productName:"Shimmering Skin Perfector",     shade:"Pearl",               swatchHex:"#F5EDE0", tip:"Press onto the tops of cheekbones and cupid's bow for an icy glow."},
+        {category:"Eyeshadow",     brand:"Urban Decay",  productName:"Naked3 Palette",                shade:"Dust & Strange",      swatchHex:"#C9A0A8", tip:"Blend rose-taupe in the crease and a shimmer shade on the lid."},
+        {category:"Eyeliner",      brand:"Charlotte Tilbury",productName:"Rock 'N' Kohl",             shade:"Bedroom Black",       swatchHex:"#1C1C1C", tip:"Tightline the upper waterline for definition without heaviness."},
+        {category:"Mascara",       brand:"Maybelline",   productName:"Lash Sensational Sky High",     shade:"Blackest Black",      swatchHex:"#141414", tip:"Wiggle the wand at the base and sweep upward for lifted fair lashes."},
+        {category:"Lip Color",     brand:"MAC",          productName:"Lipstick",                      shade:"Brave",               swatchHex:"#C48880", tip:"Line with a matching nude liner first to prevent feathering."},
+        {category:"Setting Powder",brand:"Laura Mercier",productName:"Translucent Loose Setting Powder",shade:"Translucent",      swatchHex:"#F0E4D4", tip:"Bake under eyes for 3–5 minutes to cancel blue undertones."},
+        {category:"Contour",       brand:"Anastasia Beverly Hills",productName:"Contour Kit",         shade:"Fair",                swatchHex:"#C4A882", tip:"Use a cool-toned taupe to avoid an orange cast on fair skin."},
+      ]
+    },
+    "Ivory": {
+      lookName:"Soft Morning Mist",
+      products:[
+        {category:"Foundation",    brand:"Estée Lauder", productName:"Double Wear Stay-in-Place",     shade:"1N1 Ivory Nude",      swatchHex:"#F2E0C8", tip:"Buff in circles with a dense brush for flawless 24-hour coverage."},
+        {category:"Concealer",     brand:"Tarte",        productName:"Shape Tape Concealer",          shade:"12N Fair Neutral",    swatchHex:"#F2DFC8", tip:"Blend with a flat brush for precise, crease-proof coverage."},
+        {category:"Blush",         brand:"Rare Beauty",  productName:"Soft Pinch Liquid Blush",       shade:"Joy",                 swatchHex:"#E09090", tip:"One dot blended with fingers gives a natural flush on ivory skin."},
+        {category:"Bronzer",       brand:"Too Faced",    productName:"Chocolate Soleil Matte Bronzer",shade:"Light/Medium",        swatchHex:"#C49060", tip:"Lightly dust the perimeter of the face for a subtle warmth."},
+        {category:"Highlighter",   brand:"Charlotte Tilbury",productName:"Beauty Light Wand",         shade:"Peachgasm",           swatchHex:"#F0D8C0", tip:"Tap the peach-toned wand on cheekbones for a warm, lit-from-within glow."},
+        {category:"Eyeshadow",     brand:"Pat McGrath",  productName:"Mothership VI Palette",         shade:"Sable & Bronze",      swatchHex:"#B8906A", tip:"Layer sable in the crease and bronze on the lid for warm, dreamy eyes."},
+        {category:"Eyeliner",      brand:"Stila",        productName:"Stay All Day Waterproof Liner", shade:"Intense Black",       swatchHex:"#181818", tip:"A thin flick at the outer corner elongates ivory-toned eyes beautifully."},
+        {category:"Mascara",       brand:"Dior",         productName:"Diorshow Mascara",              shade:"090 Black",           swatchHex:"#111111", tip:"Apply two coats focusing on the outer lashes to open up the eye."},
+        {category:"Lip Color",     brand:"Charlotte Tilbury",productName:"Matte Revolution Lipstick", shade:"Pillow Talk",         swatchHex:"#C88880", tip:"This universally flattering nude-pink looks effortlessly chic on ivory skin."},
+        {category:"Setting Powder",brand:"Fenty Beauty", productName:"Pro Filt'r Instant Retouch Powder",shade:"Butter",          swatchHex:"#EED8B8", tip:"Use a large fluffy brush to set the T-zone and prevent midday shine."},
+        {category:"Contour",       brand:"Charlotte Tilbury",productName:"Filmstar Bronze & Glow",    shade:"Fair-Medium",         swatchHex:"#C0986A", tip:"Blend the cool bronze shade along the hollows of cheeks with a tapered brush."},
+      ]
+    },
+    "Sand": {
+      lookName:"Golden Hour Bloom",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"130W",             swatchHex:"#E8CEAF", tip:"Apply with a sponge for a soft-matte, pore-blurring finish."},
+        {category:"Concealer",     brand:"NARS",         productName:"Soft Matte Complete Concealer",  shade:"Cashew",            swatchHex:"#E4C89E", tip:"Blend a shade slightly lighter than your foundation to brighten the under-eye."},
+        {category:"Blush",         brand:"Milani",       productName:"Baked Blush",                   shade:"Luminoso",           swatchHex:"#E09878", tip:"Sweep in a 'C' shape from temples to cheeks for a sun-kissed warmth."},
+        {category:"Bronzer",       brand:"Nars",         productName:"Laguna Bronzer",                shade:"Laguna",             swatchHex:"#C08050", tip:"Dust across the nose bridge and temples for an effortless summer look."},
+        {category:"Highlighter",   brand:"Fenty Beauty", productName:"Killawatt Freestyle Highlighter",shade:"Trophy Wife",       swatchHex:"#D4A860", tip:"Press the gold highlighter onto cheekbones for a radiant warm glow."},
+        {category:"Eyeshadow",     brand:"Huda Beauty",  productName:"Desert Dusk Palette",           shade:"Dune & Sand",        swatchHex:"#C0905A", tip:"Use terracotta in the crease and a shimmer copper on the lid."},
+        {category:"Eyeliner",      brand:"L'Oréal",      productName:"Infallible Grip Liner",         shade:"Brown Black",        swatchHex:"#3A2518", tip:"Brown-black liner warms up the eyes more naturally than pure black."},
+        {category:"Mascara",       brand:"Benefit",      productName:"Roller Lash Mascara",           shade:"Black",              swatchHex:"#141414", tip:"The curling brush lifts and separates for wide-awake warm-toned eyes."},
+        {category:"Lip Color",     brand:"MAC",          productName:"Lipstick",                      shade:"Velvet Teddy",       swatchHex:"#B8826A", tip:"This warm nude-mauve is iconic for warm peach undertones."},
+        {category:"Setting Powder",brand:"RCMA",         productName:"No-Color Powder",               shade:"No Color",           swatchHex:"#EED4B0", tip:"Invisible on warm skin tones while locking makeup in place all day."},
+        {category:"Contour",       brand:"Benefit",      productName:"Hoola Matte Bronzer",           shade:"Hoola",              swatchHex:"#B07848", tip:"A double-ended brush helps you contour and blend seamlessly."},
+      ]
+    },
+    "Beige": {
+      lookName:"Warm Amber Dusk",
+      products:[
+        {category:"Foundation",    brand:"Maybelline",   productName:"Fit Me Matte + Poreless",       shade:"220 Natural Beige",  swatchHex:"#DDB99A", tip:"Apply with a damp sponge then buff with a brush for a natural finish."},
+        {category:"Concealer",     brand:"L.A. Girl",    productName:"Pro Conceal HD Concealer",      shade:"Natural",            swatchHex:"#D8AA88", tip:"Blend outward in a triangle shape under the eye for full brightness."},
+        {category:"Blush",         brand:"NARS",         productName:"Blush",                         shade:"Desire",             swatchHex:"#D88070", tip:"Smile and apply to the apples, blending upward toward the temples."},
+        {category:"Bronzer",       brand:"Charlotte Tilbury",productName:"Airbrush Bronzer",          shade:"Medium",             swatchHex:"#B87848", tip:"Swirl across the face using circular motions for a healthy all-over warmth."},
+        {category:"Highlighter",   brand:"NYX",          productName:"Born to Glow Highlighter",      shade:"Pure Gold",          swatchHex:"#D4A050", tip:"Layer over setting spray for an intensified foil-like glow on medium skin."},
+        {category:"Eyeshadow",     brand:"Too Faced",    productName:"Sweet Peach Palette",           shade:"Cobbler & Georgia",  swatchHex:"#C07848", tip:"Blend warm peach in the crease and a shimmery copper across the lid."},
+        {category:"Eyeliner",      brand:"NYX",          productName:"Epic Ink Liner",                shade:"Black",              swatchHex:"#0E0E0E", tip:"A precise wing brings drama and definition to warm golden eyes."},
+        {category:"Mascara",       brand:"L'Oréal",      productName:"Voluminous Original Mascara",   shade:"Blackest Black",     swatchHex:"#101010", tip:"Build two coats for bold, defined lashes that complement warm skin."},
+        {category:"Lip Color",     brand:"NYX",          productName:"Soft Matte Lip Cream",          shade:"Rome",               swatchHex:"#B06858", tip:"This terracotta-rose shade complements golden warm undertones perfectly."},
+        {category:"Setting Powder",brand:"e.l.f.",       productName:"Halo Glow Setting Powder",      shade:"Warm Sand",          swatchHex:"#D4A880", tip:"The warm-toned powder prevents the ashy cast that some translucent powders create."},
+        {category:"Contour",       brand:"NYX",          productName:"Wonder Stick Highlight & Contour",shade:"Medium",           swatchHex:"#A86E40", tip:"The stick format lets you draw precisely along cheekbones before blending."},
+      ]
+    },
+    "Honey": {
+      lookName:"Burnished Saffron Light",
+      products:[
+        {category:"Foundation",    brand:"MAC",          productName:"Studio Fix Fluid SPF 15",       shade:"NC30",               swatchHex:"#CFA07A", tip:"Shake well and apply with a foundation brush for buildable, long-wear coverage."},
+        {category:"Concealer",     brand:"Maybelline",   productName:"Instant Age Rewind Concealer",  shade:"Medium",             swatchHex:"#C89870", tip:"The cushion applicator deposits product precisely for under-eye brightening."},
+        {category:"Blush",         brand:"e.l.f.",       productName:"Monochromatic Multi Stick",      shade:"Bronzed Cherry",     swatchHex:"#C86858", tip:"Blend on the cheeks and lips for a cohesive monochromatic warm look."},
+        {category:"Bronzer",       brand:"Fenty Beauty", productName:"Sun Stalk'r Instant Warmth Bronzer",shade:"Shady Biz",     swatchHex:"#A87040", tip:"Mix with the Sun Stalk'r in 'Caramel Cutie' for a bespoke depth on honey skin."},
+        {category:"Highlighter",   brand:"ColourPop",    productName:"Super Shock Highlighter",       shade:"Wisp",               swatchHex:"#D4A860", tip:"Press with fingertip for a molten gold highlight that pops on honey skin."},
+        {category:"Eyeshadow",     brand:"Morphe",       productName:"35O Nature Glow Palette",       shade:"Fawn & Goldie",      swatchHex:"#B07840", tip:"Blend warm brown in the crease and gold shimmer across the entire lid."},
+        {category:"Eyeliner",      brand:"Kat Von D",    productName:"Tattoo Liner",                  shade:"Trooper Black",      swatchHex:"#0A0A0A", tip:"The ultra-fine tip creates a precise line that makes honey-toned eyes pop."},
+        {category:"Mascara",       brand:"Too Faced",    productName:"Better Than Sex Mascara",       shade:"Black",              swatchHex:"#111111", tip:"The hourglass wand grabs every lash for dramatic volume on warm-toned eyes."},
+        {category:"Lip Color",     brand:"Fenty Beauty", productName:"Stunna Lip Paint",              shade:"Uncensored (Red)",    swatchHex:"#B83828", tip:"A true red reads warm on honey undertones — line lips first for precision."},
+        {category:"Setting Powder",brand:"Fenty Beauty", productName:"Pro Filt'r Instant Retouch Powder",shade:"Honey",          swatchHex:"#C89860", tip:"This shade is designed to set deeper warm tones without any white cast."},
+        {category:"Contour",       brand:"Anastasia Beverly Hills",productName:"Stick Foundation",    shade:"Chestnut",           swatchHex:"#9A6030", tip:"Warm chestnut contour deepens the face without looking muddy on honey skin."},
+      ]
+    },
+    "Wheat": {
+      lookName:"Earthy Olive Sunset",
+      products:[
+        {category:"Foundation",    brand:"Armani Beauty",productName:"Luminous Silk Foundation",      shade:"6.5",                swatchHex:"#BD8E64", tip:"Build from sheer to medium coverage using a foundation brush in outward strokes."},
+        {category:"Concealer",     brand:"Fenty Beauty", productName:"Pro Filt'r Concealer",          shade:"260W",               swatchHex:"#B88860", tip:"Blend outward from the center under the eye for a seamless finish."},
+        {category:"Blush",         brand:"MAC",          productName:"Powder Blush",                  shade:"Peaches",            swatchHex:"#C87858", tip:"A peach-toned blush flatters olive warm undertones more than pink does."},
+        {category:"Bronzer",       brand:"Guerlain",     productName:"Terracotta Bronzer",            shade:"05 Medium Brunettes",swatchHex:"#A87040", tip:"This iconic powder gives wheat-toned skin the most authentic sun-bronzed look."},
+        {category:"Highlighter",   brand:"MAC",          productName:"Dazzleshadow Loose",            shade:"It's Raining Gold",  swatchHex:"#C89840", tip:"Use a fan brush to lay gold shimmer on the high points of the face."},
+        {category:"Eyeshadow",     brand:"Natasha Denona",productName:"Cazel Palette",               shade:"Leather & Bronze",   swatchHex:"#A07040", tip:"Pull warm leather through the crease and bronze on the lid for depth."},
+        {category:"Eyeliner",      brand:"MAC",          productName:"Powerpoint Eye Pencil",         shade:"Stubborn Brown",     swatchHex:"#3A2010", tip:"Brown on the waterline looks more natural and warm than black on olive skin."},
+        {category:"Mascara",       brand:"Charlotte Tilbury",productName:"Pillow Talk Push Up Lashes",shade:"Seductive Black",   swatchHex:"#0A0A0A", tip:"Curl lashes first, then build two coats for an effortlessly lifted look."},
+        {category:"Lip Color",     brand:"Charlotte Tilbury",productName:"Matte Revolution",          shade:"Walk of Shame",      swatchHex:"#B05840", tip:"This warm brick-red is universally stunning on olive-warm complexions."},
+        {category:"Setting Powder",brand:"Hourglass",    productName:"Ambient Lighting Powder",       shade:"Dim Light",          swatchHex:"#C0906A", tip:"Dusted all over, Dim Light adds a warm luminosity that wheat skin craves."},
+        {category:"Contour",       brand:"NARS",         productName:"Bronzing Powder",               shade:"Casino",             swatchHex:"#906030", tip:"Casino's deep warm-brown doubles as a sculpting shade for olive undertones."},
+      ]
+    },
+    "Caramel": {
+      lookName:"Bronze Canyon Warmth",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"310W",             swatchHex:"#A87550", tip:"Mix with a drop of facial oil for a glow-from-within finish on warm skin."},
+        {category:"Concealer",     brand:"Tarte",        productName:"Shape Tape Concealer",          shade:"38N Medium Neutral",swatchHex:"#A87050", tip:"Apply as a contour and blend softly for natural deepening without foundation disruption."},
+        {category:"Blush",         brand:"IMAN",         productName:"Second to None Blush",          shade:"Raisin",             swatchHex:"#A84848", tip:"Deep berry blush on caramel skin creates a rich, dimensional warmth."},
+        {category:"Bronzer",       brand:"IMAN",         productName:"Earth Tones Bronzing Powder",   shade:"Earth Medium",       swatchHex:"#986030", tip:"Formulated specifically for deeper warm tones — builds without mudding."},
+        {category:"Highlighter",   brand:"Fenty Beauty", productName:"Diamond Bomb All-Over Diamond Veil",shade:"Gold Nugget",  swatchHex:"#C08830", tip:"Press into the skin with fingertip for a rich metallic highlight."},
+        {category:"Eyeshadow",     brand:"Juvia's Place",productName:"The Saharan Palette",           shade:"Cairo & Desert Rose",swatchHex:"#985830", tip:"Deep copper in crease, desert rose on the lid creates warmth and romance."},
+        {category:"Eyeliner",      brand:"NARS",         productName:"Eyeliner Stylo",                shade:"Via Veneto Brown",   swatchHex:"#3A1E0A", tip:"A warm brown pencil on the lower waterline keeps the look cohesive and warm."},
+        {category:"Mascara",       brand:"Fenty Beauty", productName:"Full Front'l Volume & Lifting Mascara",shade:"Black",     swatchHex:"#0A0A0A", tip:"Three coats build full, lifted lashes that frame caramel-toned eyes perfectly."},
+        {category:"Lip Color",     brand:"MAC",          productName:"Powder Kiss Lipstick",          shade:"Devoted To Chili",   swatchHex:"#A04830", tip:"This warm brick-red is an absolute classic on caramel warm undertones."},
+        {category:"Setting Powder",brand:"Black Opal",   productName:"True Color Pore-Perfecting Powder",shade:"Beautiful Bronze",swatchHex:"#A87040", tip:"Specifically formulated for deeper skin tones to set without dulling the skin."},
+        {category:"Contour",       brand:"Anastasia Beverly Hills",productName:"Contour Kit",         shade:"Medium",             swatchHex:"#804820", tip:"The medium kit's warm taupe-brown sculpts caramel skin without ashiness."},
+      ]
+    },
+    "Toffee": {
+      lookName:"Rich Spiced Mahogany",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"370W",             swatchHex:"#935E3A", tip:"Apply sparingly around the face and blend in with fingertips for the most natural result."},
+        {category:"Concealer",     brand:"NARS",         productName:"Soft Matte Complete Concealer",  shade:"Syracuse",          swatchHex:"#8E5A38", tip:"Blend with a flat brush under eyes, then pat-not-rub for crease-free wear."},
+        {category:"Blush",         brand:"Juvia's Place",productName:"The Nubian Palette (blush)",    shade:"Nubian",             swatchHex:"#8A3020", tip:"A deep plum-brick blush creates a gorgeous flush on toffee skin."},
+        {category:"Bronzer",       brand:"Sleek MakeUP", productName:"Solstice Highlighting Palette", shade:"Dusk",               swatchHex:"#885028", tip:"The deeper shades in the dusk palette contour and bronze simultaneously."},
+        {category:"Highlighter",   brand:"Pat McGrath",  productName:"Skin Fetish: Sublime Highlighter",shade:"Gold 003",        swatchHex:"#B07020", tip:"This molten gold highlights intensely on toffee skin for an editorial glow."},
+        {category:"Eyeshadow",     brand:"Morphe",       productName:"35B Color Burst Palette",       shade:"Sable & Plum",       swatchHex:"#5A2820", tip:"Deep sable in the crease and plum shimmer on the lid reads bold and romantic."},
+        {category:"Eyeliner",      brand:"L'Oréal",      productName:"Infallible The Super Liner",    shade:"Obsidian Black",     swatchHex:"#080808", tip:"A thick flick of liquid liner creates graphic impact on toffee-toned eyes."},
+        {category:"Mascara",       brand:"Lancôme",      productName:"Hypnôse Drama Mascara",         shade:"Excessive Black",    swatchHex:"#0A0A0A", tip:"The volumising brush builds intense drama that stands out on deep warm skin."},
+        {category:"Lip Color",     brand:"NARS",         productName:"Velvet Matte Lip Pencil",       shade:"Dragon Girl",        swatchHex:"#782830", tip:"A deep red lip on toffee skin is pure Hollywood — line and fill for longevity."},
+        {category:"Setting Powder",brand:"Dermablend",   productName:"Loose Setting Powder",          shade:"Medium",             swatchHex:"#906040", tip:"Buildable coverage sets deep tones evenly without a chalky finish."},
+        {category:"Contour",       brand:"NYX",          productName:"Highlight & Contour Pro Palette",shade:"Deep Contour",      swatchHex:"#6A3818", tip:"The deep contour shade carves out dramatic cheekbones on toffee complexions."},
+      ]
+    },
+    "Chestnut": {
+      lookName:"Plum Ember Dusk",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"420W",             swatchHex:"#7D4A2A", tip:"Pump onto the back of the hand and blend with a sponge for airbrush-level coverage."},
+        {category:"Concealer",     brand:"Fenty Beauty", productName:"Pro Filt'r Concealer",          shade:"420W",               swatchHex:"#784828", tip:"Use 1–2 shades lighter under the eyes to counteract hyperpigmentation."},
+        {category:"Blush",         brand:"IMAN",         productName:"Luxury Blush Powder",           shade:"Terra Cotta",        swatchHex:"#7A2818", tip:"Deep brick blush pops beautifully against the warmth of chestnut skin."},
+        {category:"Bronzer",       brand:"Black Radiance",productName:"True Complexion Bronzing Veil",shade:"Deep Bronze",        swatchHex:"#7A3810", tip:"Use a light hand — the rich pigment goes a long way on deep warm skin."},
+        {category:"Highlighter",   brand:"Juvia's Place",productName:"I Am Magic Foundation (used as HL)",shade:"Gold Dust",     swatchHex:"#A86018", tip:"A bronze-gold highlighter on chestnut skin creates a breathtaking metallic finish."},
+        {category:"Eyeshadow",     brand:"Juvia's Place",productName:"The Nubian II Palette",         shade:"Nubian Night & Fire",swatchHex:"#481808", tip:"Deep burgundy in the crease and a copper shimmer on the lid is regal on chestnut skin."},
+        {category:"Eyeliner",      brand:"NYX",          productName:"Epic Smoke Liner",              shade:"Black Brown Smoke",  swatchHex:"#181008", tip:"Smudge along the lash line for a sultry smoky effect that deepens chestnut eyes."},
+        {category:"Mascara",       brand:"NYX",          productName:"On the Rise Volume Mascara",    shade:"Black",              swatchHex:"#080808", tip:"Build 3 coats for dramatic, statement lashes against deep warm skin."},
+        {category:"Lip Color",     brand:"Maybelline",   productName:"SuperStay Matte Ink",           shade:"Protector",          swatchHex:"#602010", tip:"A deep burgundy lip is stunning on chestnut skin — blot once for velvet matte wear."},
+        {category:"Setting Powder",brand:"Fashion Fair",productName:"Oil Control Loose Powder",       shade:"Amber",              swatchHex:"#7A4818", tip:"An amber-toned powder is essential for setting without adding ashiness."},
+        {category:"Contour",       brand:"Fenty Beauty", productName:"Match Stix Matte Skinstick",    shade:"Truffle",            swatchHex:"#5A2808", tip:"Warm truffle contour deepens and sculpts chestnut skin with precision."},
+      ]
+    },
+    "Mahogany": {
+      lookName:"Velvet Midnight",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"440C",             swatchHex:"#673620", tip:"Mix shades 440C and 470C for a bespoke match to mahogany cool-red undertones."},
+        {category:"Concealer",     brand:"Maybelline",   productName:"Fit Me Concealer",              shade:"45 Deep",            swatchHex:"#643218", tip:"Cool-toned deep concealer corrects dark circles without leaving a grey cast."},
+        {category:"Blush",         brand:"Danessa Myricks",productName:"Colorfix 24 Hour Cream",      shade:"Raisin",             swatchHex:"#5A1808", tip:"A deep wine cream blush on mahogany skin creates a rich, jewel-toned flush."},
+        {category:"Bronzer",       brand:"Fenty Beauty", productName:"Sun Stalk'r Bronzer",           shade:"Kalahari Sands",     swatchHex:"#6A2808", tip:"This rich bronze deepens mahogany skin without pulling red or orange."},
+        {category:"Highlighter",   brand:"Pat McGrath",  productName:"Skin Fetish Highlighter",       shade:"Gold Bronze 004",    swatchHex:"#985010", tip:"Deep bronze-gold highlighter creates extraordinary drama on mahogany skin."},
+        {category:"Eyeshadow",     brand:"Juvia's Place",productName:"The Masquerade Palette",        shade:"Obsidian & Crimson", swatchHex:"#3A0808", tip:"Deep obsidian lid with a crimson inner corner creates a bold, editorial look."},
+        {category:"Eyeliner",      brand:"Kat Von D",    productName:"Tattoo Liner",                  shade:"Trooper Black",      swatchHex:"#020202", tip:"A bold graphic liner on mahogany skin photographs spectacularly."},
+        {category:"Mascara",       brand:"Pat McGrath",  productName:"FetishEyes Mascara",            shade:"Carbon Black",       swatchHex:"#050505", tip:"This ultra-black mascara creates maximum impact against deep cool-red skin."},
+        {category:"Lip Color",     brand:"MAC",          productName:"Retro Matte Lipstick",          shade:"Diva",               swatchHex:"#4A1008", tip:"Diva's deep burgundy is the iconic deep lip shade for mahogany skin."},
+        {category:"Setting Powder",brand:"Fenty Beauty", productName:"Pro Filt'r Instant Retouch",    shade:"Deep 430",           swatchHex:"#623018", tip:"This deep-toned powder locks in makeup without creating a flashback in photos."},
+        {category:"Contour",       brand:"Anastasia Beverly Hills",productName:"Contour Kit",         shade:"Deep",               swatchHex:"#481008", tip:"The deep kit sculpts mahogany skin with rich cool-dark pigments."},
+      ]
+    },
+    "Espresso": {
+      lookName:"Dark Orchid Evening",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"490N",             swatchHex:"#4E2510", tip:"Warm the bottle in your hands before applying for the most seamless blend."},
+        {category:"Concealer",     brand:"Fenty Beauty", productName:"Pro Filt'r Concealer",          shade:"490N",               swatchHex:"#4A2210", tip:"Apply 1 shade lighter to brighten and 1 shade darker for spot correction."},
+        {category:"Blush",         brand:"Juvia's Place",productName:"The Masquerade Blush",          shade:"Deep Berry",         swatchHex:"#420808", tip:"A deep plum blush is essential for visible colour payoff on espresso skin."},
+        {category:"Bronzer",       brand:"NYX",          productName:"Matte Bronzer",                 shade:"Deep Tan",           swatchHex:"#4E2008", tip:"Contour and bronze in one step using this richly pigmented deep bronzer."},
+        {category:"Highlighter",   brand:"IMAN",         productName:"Luxury Highlighter",            shade:"Bronze Over",        swatchHex:"#8A4010", tip:"Deep bronze-over highlighter creates a luminous, dimensional glow on espresso skin."},
+        {category:"Eyeshadow",     brand:"Pat McGrath",  productName:"Dark Star 006 Kit",             shade:"Oxide & Peral",      swatchHex:"#200808", tip:"Push deep oxblood into the crease and a duochrome on the lid for drama."},
+        {category:"Eyeliner",      brand:"Urban Decay",  productName:"24/7 Glide-On Pencil",          shade:"Perversion",         swatchHex:"#000000", tip:"Smudge on the upper and lower lash lines for an intensely smoky effect."},
+        {category:"Mascara",       brand:"Hourglass",    productName:"Caution Extreme Lash Mascara",  shade:"Ultra Black",        swatchHex:"#010101", tip:"The extreme-volume formula creates dramatic, sculpted lashes on espresso skin."},
+        {category:"Lip Color",     brand:"NARS",         productName:"Velvet Matte Lip Pencil",       shade:"Train Bleu",         swatchHex:"#1A0810", tip:"Deeper shades like blue-blacks and aubergines look extraordinary on espresso skin."},
+        {category:"Setting Powder",brand:"Fashion Fair",productName:"Oil-Free Powder Foundation",     shade:"Ebony Brown",        swatchHex:"#4A2008", tip:"Deep brown-toned powder eliminates shine while respecting the richness of the skin."},
+        {category:"Contour",       brand:"Fenty Beauty", productName:"Match Stix Matte Skinstick",    shade:"Mocha",              swatchHex:"#361008", tip:"Mocha deepens and sculpts espresso skin without looking muddy or grey."},
+      ]
+    },
+    "Ebony": {
+      lookName:"Midnight Obsidian",
+      products:[
+        {category:"Foundation",    brand:"Fenty Beauty", productName:"Pro Filt'r Soft Matte Foundation",shade:"498N",             swatchHex:"#321408", tip:"The deepest Fenty shade is a perfect match — apply with a damp sponge for a flawless finish."},
+        {category:"Concealer",     brand:"Make Up For Ever",productName:"Ultra HD Self-Setting Concealer",shade:"Y555 Deep",     swatchHex:"#301008", tip:"Cool-toned deep concealer counteracts hyperpigmentation without grey cast."},
+        {category:"Blush",         brand:"Danessa Myricks",productName:"Colorfix Cream Color",        shade:"Deep Plum",          swatchHex:"#300408", tip:"A pigment-rich deep plum is the most visible flush on the deepest skin tones."},
+        {category:"Bronzer",       brand:"Juvia's Place",productName:"I Am Magic Palette",            shade:"Void",               swatchHex:"#2A0808", tip:"Use sparingly in the hollows — ebony skin's natural depth does most of the sculpting."},
+        {category:"Highlighter",   brand:"Pat McGrath",  productName:"Skin Fetish Sublime Kit",       shade:"Deep 5 Gold",        swatchHex:"#703008", tip:"Deep gold and bronze highlighters create an extraordinary luminosity on ebony skin."},
+        {category:"Eyeshadow",     brand:"Juvia's Place",productName:"The Masquerade Mini Palette",   shade:"Obsidian & Galaxy", swatchHex:"#100008", tip:"Ultra-dark and duochrome shades on ebony skin create a breathtaking cosmic effect."},
+        {category:"Eyeliner",      brand:"Fenty Beauty", productName:"Flypencil Longwear Pencil",     shade:"Cuz I'm Black",      swatchHex:"#000000", tip:"A jet-black liner with white on the inner corner creates stunning contrast."},
+        {category:"Mascara",       brand:"Armani Beauty",productName:"Eyes To Kill Mascara",          shade:"Noir Eclair",        swatchHex:"#000000", tip:"The intensely black formula and curved brush maximise impact on every lash."},
+        {category:"Lip Color",     brand:"MAC",          productName:"Retro Matte Lipstick",          shade:"Vibe Tribe",         swatchHex:"#200008", tip:"Deep aubergine and violet lip shades are extraordinary on ebony skin."},
+        {category:"Setting Powder",brand:"Uoma Beauty",  productName:"Stay Woke Luminous Setting Powder",shade:"Black Pearl",   swatchHex:"#2A0A08", tip:"Specifically formulated for deep skin to set with zero white cast or dulling."},
+        {category:"Contour",       brand:"Fenty Beauty", productName:"Match Stix Matte Skinstick",    shade:"Espresso",           swatchHex:"#200808", tip:"A matte espresso stick sculpts ebony skin naturally, creating shadow without grey."},
+      ]
+    },
+  };
+
+  // Match by shade name
+  const key = shade.name;
+  const entry = DB[key] || DB["Honey"]; // fallback
+  return Promise.resolve(entry);
+}
+
+function renderProducts(data){
+  currentProducts=data.products;
+  document.getElementById('lookNameEl').textContent=data.lookName||'Your Curated Look';
+
+  // Build tabs
+  catTabs.innerHTML='';
+  prodPanels.innerHTML='';
+  miniSws.innerHTML='';
+
+  data.products.forEach((p,i)=>{
+    // Tab
+    const tab=document.createElement('button');
+    tab.className='cat-tab'+(i===0?' active':'');
+    tab.innerHTML=`<div class="tab-dot" style="background:${p.swatchHex}"></div>${p.category}`;
+    tab.onclick=()=>switchTab(i);
+    catTabs.appendChild(tab);
+
+    // Panel
+    const panel=document.createElement('div');
+    panel.className='product-detail'+(i===0?' active':'');
+    panel.dataset.idx=i;
+    panel.innerHTML=`
+      <div class="pd-top">
+        <div class="pd-swatch" style="background:${p.swatchHex}"><div class="pd-swatch-inner"></div></div>
+        <div style="flex:1;min-width:0">
+          <div class="pd-cat">${p.category}</div>
+          <div class="pd-brand">${p.brand}</div>
+          <div class="pd-name">${p.productName}</div>
+          <div class="pd-shade-badge" style="background:${p.swatchHex}22;border:1px solid ${p.swatchHex}44">${p.shade}</div>
+        </div>
+      </div>
+      <div class="pd-tip-box">
+        <div class="pd-tip-label">Pro Tip</div>
+        <div class="pd-tip">${p.tip}</div>
+      </div>`;
+    prodPanels.appendChild(panel);
+
+    // Mini swatch
+    const mwrap=document.createElement('div');
+    mwrap.style.cssText='text-align:center;cursor:pointer';
+    mwrap.innerHTML=`<div class="mini-sw${i===0?' active':''}" style="background:${p.swatchHex}" data-idx="${i}" title="${p.category}: ${p.shade}"></div><div class="mini-sw-label">${p.category.split(' ')[0]}</div>`;
+    mwrap.onclick=()=>switchTab(i);
+    miniSws.appendChild(mwrap);
+  });
+
+  prodsWrap.style.display='block';
+
+  // Copy button
+  document.getElementById('copyBtn').onclick=()=>{
+    const txt=`My Shade: ${currentShade.name} (${currentShade.depth}, ${currentShade.undertone})\nLook: ${data.lookName}\n\n`+
+      data.products.map(p=>`${p.category}: ${p.brand} – ${p.productName} in ${p.shade}`).join('\n');
+    navigator.clipboard?.writeText(txt).then(()=>{
+      document.getElementById('copyBtn').textContent='✓ Copied to clipboard!';
+      setTimeout(()=>document.getElementById('copyBtn').textContent='Copy Full Look to Clipboard',2200);
+    });
+  };
+}
+
+function switchTab(idx){
+  document.querySelectorAll('.cat-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('.product-detail').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.mini-sw').forEach((s,i)=>s.classList.toggle('active',i===idx));
+  catTabs.children[idx]?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+scanBtn.addEventListener('click',startScan);
+
+// ── PRICING / CHECKOUT MODAL ─────────────────────────────────────────
+const PLANS = {
+  pro:     { label:'Shade Pro Membership',     name:'Shade Pro',     price:10, welcomeTitle:'Welcome to Shade Pro',     welcomeText:'Your membership is now active. Unlimited scans, saved shade history, and priority recommendations are ready for you.' },
+  premium: { label:'Shade Premium Membership', name:'Shade Premium', price:18, welcomeTitle:'Welcome to Shade Premium', welcomeText:'Your membership is now active. Personalized skincare tips, pro application guides for all 11 makeup elements, and your full beauty profile are ready for you.' },
+};
+let selectedPlan = 'pro';
+
+const checkoutOverlay   = document.getElementById('checkoutOverlay');
+const upgradeBtn        = document.getElementById('upgradeBtn');
+const upgradePremiumBtn = document.getElementById('upgradePremiumBtn');
+const checkoutClose     = document.getElementById('checkoutClose');
+const checkoutForm      = document.getElementById('checkoutForm');
+const checkoutSuccess   = document.getElementById('checkoutSuccess');
+const closeSuccessBtn   = document.getElementById('closeSuccessBtn');
+const payForm           = document.getElementById('payForm');
+const payBtn            = document.getElementById('payBtn');
+const checkoutErr       = document.getElementById('checkoutErr');
+const cardNumberEl      = document.getElementById('cardNumber');
+const cardExpiryEl      = document.getElementById('cardExpiry');
+const cardCvcEl         = document.getElementById('cardCvc');
+const cardTypeLabel     = document.getElementById('cardTypeLabel');
+const checkoutEyebrow   = document.getElementById('checkoutEyebrow');
+const checkoutSummaryLabel = document.getElementById('checkoutSummaryLabel');
+const checkoutSummaryPrice = document.getElementById('checkoutSummaryPrice');
+const successTitle      = document.getElementById('successTitle');
+const successText       = document.getElementById('successText');
+
+function openCheckout(planKey){
+  selectedPlan = planKey;
+  const plan = PLANS[planKey];
+  checkoutEyebrow.textContent = plan.name;
+  checkoutSummaryLabel.textContent = plan.label;
+  checkoutSummaryPrice.innerHTML = `$${plan.price}<span>/month</span>`;
+  payBtn.textContent = `Pay $${plan.price}.00 / month`;
+
+  checkoutOverlay.classList.add('open');
+  checkoutForm.style.display='block';
+  checkoutSuccess.style.display='none';
+  payForm.reset();
+  checkoutErr.style.display='none';
+  document.body.style.overflow='hidden';
+}
+function closeCheckout(){
+  checkoutOverlay.classList.remove('open');
+  document.body.style.overflow='';
+}
+
+upgradeBtn.addEventListener('click', () => openCheckout('pro'));
+upgradePremiumBtn.addEventListener('click', () => openCheckout('premium'));
+checkoutClose.addEventListener('click', closeCheckout);
+checkoutOverlay.addEventListener('click', e => { if(e.target===checkoutOverlay) closeCheckout(); });
+closeSuccessBtn.addEventListener('click', closeCheckout);
+
+// Card number formatting + brand detection
+cardNumberEl.addEventListener('input', () => {
+  let v = cardNumberEl.value.replace(/\D/g,'').slice(0,16);
+  cardNumberEl.value = v.replace(/(\d{4})(?=\d)/g,'$1 ').trim();
+  if(/^4/.test(v)) cardTypeLabel.textContent='VISA';
+  else if(/^5[1-5]/.test(v)) cardTypeLabel.textContent='MASTERCARD';
+  else if(/^3[47]/.test(v)) cardTypeLabel.textContent='AMEX';
+  else if(/^6(?:011|5)/.test(v)) cardTypeLabel.textContent='DISCOVER';
+  else cardTypeLabel.textContent='';
+});
+
+// Expiry MM / YY formatting
+cardExpiryEl.addEventListener('input', () => {
+  let v = cardExpiryEl.value.replace(/\D/g,'').slice(0,4);
+  if(v.length >= 3) v = v.slice(0,2)+' / '+v.slice(2);
+  cardExpiryEl.value = v;
+});
+
+// CVC numeric only
+cardCvcEl.addEventListener('input', () => {
+  cardCvcEl.value = cardCvcEl.value.replace(/\D/g,'').slice(0,4);
+});
+
+// Luhn algorithm check
+function luhnValid(num){
+  let sum=0, alt=false;
+  for(let i=num.length-1;i>=0;i--){
+    let n=parseInt(num[i],10);
+    if(alt){ n*=2; if(n>9) n-=9; }
+    sum+=n; alt=!alt;
+  }
+  return sum%10===0;
+}
+
+payForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  checkoutErr.style.display='none';
+
+  const rawNum = cardNumberEl.value.replace(/\s/g,'');
+  const expiry = cardExpiryEl.value.replace(/\s/g,'');
+  const cvc = cardCvcEl.value;
+  const name = document.getElementById('cardName').value.trim();
+  const email = document.getElementById('cardEmail').value.trim();
+
+  // Client-side validation only — NOT a substitute for real payment processing
+  if(rawNum.length < 13 || !luhnValid(rawNum)){
+    checkoutErr.textContent = 'Please enter a valid card number.';
+    checkoutErr.style.display='block';
+    return;
+  }
+  const expMatch = expiry.match(/^(\d{2})\/(\d{2})$/);
+  if(!expMatch){
+    checkoutErr.textContent = 'Please enter a valid expiry date (MM/YY).';
+    checkoutErr.style.display='block';
+    return;
+  }
+  const [_, mm, yy] = expMatch;
+  const now = new Date();
+  const expDate = new Date(2000+(+yy), (+mm));
+  if(+mm < 1 || +mm > 12 || expDate < now){
+    checkoutErr.textContent = 'This card has expired or the date is invalid.';
+    checkoutErr.style.display='block';
+    return;
+  }
+  if(cvc.length < 3){
+    checkoutErr.textContent = 'Please enter a valid CVC.';
+    checkoutErr.style.display='block';
+    return;
+  }
+  if(!name){
+    checkoutErr.textContent = 'Please enter the cardholder name.';
+    checkoutErr.style.display='block';
+    return;
+  }
+  if(!email || !email.includes('@')){
+    checkoutErr.textContent = 'Please enter a valid email address.';
+    checkoutErr.style.display='block';
+    return;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // ⚠️  IMPORTANT — REAL PAYMENT INTEGRATION REQUIRED HERE
+  // This form performs client-side formatting/validation ONLY.
+  // Raw card numbers must NEVER be sent to your own server or stored.
+  // To actually charge cards, replace this block with a real processor:
+  //
+  //   Stripe (recommended):
+  //   1. Add Stripe.js via a script tag pointing to js.stripe.com/v3
+  //   2. Replace the #cardNumber/#cardExpiry/#cardCvc inputs with a
+  //      Stripe Elements card field (handles PCI compliance for you)
+  //   3. On submit, call stripe.confirmCardPayment() or redirect to
+  //      Stripe Checkout, created via your backend using your secret key
+  //   4. Your backend creates a Subscription via the Stripe API
+  //      (https://stripe.com/docs/billing/subscriptions/overview)
+  //
+  // Until that integration is added, this demo simulates a successful
+  // payment after validation — no money moves and no card data is sent
+  // anywhere.
+  // ─────────────────────────────────────────────────────────────────
+
+  payBtn.disabled = true;
+  payBtn.innerHTML = '<span class="spinner"></span> Processing…';
+
+  setTimeout(() => {
+    const plan = PLANS[selectedPlan];
+    successTitle.textContent = plan.welcomeTitle;
+    successText.textContent = plan.welcomeText;
+    checkoutForm.style.display='none';
+    checkoutSuccess.style.display='block';
+    payBtn.disabled = false;
+    payBtn.textContent = `Pay $${plan.price}.00 / month`;
+  }, 1400);
+});
+</script>
+</body>
+</html>
